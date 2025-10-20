@@ -1,8 +1,13 @@
 from fastapi import APIRouter
-from services.ai_service import model
+from pydantic import BaseModel
+from services.ai_service import analyze_prompt
 
 router = APIRouter(prefix="/ai", tags=["AI"])
 
-@router.get("/test")
-def test_ai():
-    return 
+class AnalyzeRequest(BaseModel):
+    prompt: str
+
+@router.post("/analyze")
+async def analyze_route(req: AnalyzeRequest):
+    res = analyze_prompt(req.prompt)
+    return {"result": res}
