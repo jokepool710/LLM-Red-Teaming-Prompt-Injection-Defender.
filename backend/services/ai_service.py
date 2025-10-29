@@ -2,10 +2,10 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-MODEL_MODE = os.getenv("MODEL_MODE", "mock")  # openai / hf / mock
+MODEL_MODE = os.getenv("MODEL_MODE", "mock")  
 
 def _rule_based(prompt: str):
-    # simple rule checks
+
     p = prompt.lower()
     if any(k in p for k in ["ignore previous", "ignore instructions", "reveal system prompt", "exfiltrate"]):
         return {"label":"prompt-injection","score":0.95,"explanation":"Matched prompt-injection keywords"}
@@ -17,13 +17,13 @@ def _use_openai(prompt: str):
     try:
         import openai
         openai.api_key = OPENAI_API_KEY
-        # use moderation endpoint first
+      
         mod = openai.Moderation.create(input=prompt)
         mod_res = mod["results"][0]
         flagged = mod_res.get("flagged", False)
         if flagged:
             return {"label":"malicious","score":1.0,"explanation":str(mod_res.get("categories", {}))}
-        # fallback to chat classify
+   
         resp = openai.ChatCompletion.create(
             model="gpt-4o-mini",
             messages=[
@@ -65,7 +65,7 @@ def analyze_prompt(prompt: str):
         return _use_openai(prompt)
     if mode == "hf":
         return _use_hf_zero_shot(prompt)
-    # default: try rule based then hf then openai
+
     r = _rule_based(prompt)
     if r.get("score",0) > 0.5:
         return r
